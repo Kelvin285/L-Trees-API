@@ -46,8 +46,13 @@ public class LTree {
 	 * 	@splitwest creates a branch and rotates it to the north 30 degrees
 	 * 	@shrink shrinks the current section of the tree by 30%
 	 * 	@grow grows the current section of the tree by 50%
-	 *  @iterations : "++" and "--" (increase and decrease iterations by 1)
-	 * 	@extra_function "<number" and ">number" (only executes the function if a random number between 0 and 99 is less or greater than the input number.  For example: place<75 would only execute if a random number between 0 and 99 is less than 75.
+	 *  @changing_iterations USE: "++" and "--" (increase and decrease iterations by 1)
+	 *  @angle USE: "angle:number".  EXAMPLE: "angle:30" <-- Changes the angle of rotation for the tree.
+	 *  @skip skips the current section of the tree.  Useful for if you want to make trees with floating parts.
+	 *  @end ends the current branch of the tree.  Useful for making trees that look like they've been chopped down.
+	 * 	@extra_function_1 "<NUMBER" and ">NUMBER" (only executes the function if a random number between 0 and 99 is less or greater than the input number.  For example: place<75 would only execute if a random number between 0 and 99 is less than 75.
+	 * 	@extra_function_2 "#" put this at the start of a function string to make it only execute on the main branch of the tree. Example: {"angle:15", "#rotrand", "place", "angle:45", "splitnorth"}.  rotrand would only execute on the main branch.
+	
 	 * @EXAMPLE String[] tree = {"splitrand","splitrand","place","place"}; //this generates an evergreen tree.
 	 * 
 	 * 	@param growsOn The blockstates for blocks the tree is allowed to grow on

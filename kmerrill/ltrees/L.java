@@ -24,6 +24,8 @@ public class L {
 	   private Color[][][] stuff;
 	   private int SIZEX, SIZEY, SIZEZ;
 	   
+	   public double angle = 30;
+	   
 	   public L(LSystemPos pos, LSystem parent, String[] system, int iterations, double size, boolean main, Color[][][] stuff, int SIZEX, int SIZEY, int SIZEZ) {
 		   this.pos = pos;
 		   this.system = system;
@@ -34,13 +36,12 @@ public class L {
 		   this.SIZEX = SIZEX;
 		   this.SIZEY = SIZEY;
 		   this.SIZEZ = SIZEZ;
+		   this.main = main;
 	   }
 	   
 	   public void runFunction(Random rand) {
 		   if (iterations <= 0) return;
-		   	if (main) iterations+=0;
-		   else
-			   iterations--;
+		   iterations--;
 		   
 		   for (String function : system) {
 			   run(function, rand);
@@ -77,34 +78,45 @@ public class L {
 		   if (function.contentEquals("rotnorth")) rot2(1);
 		   if (function.contentEquals("rotsouth")) rot2(-1);
 		   
-		   if (function.contentEquals("rot90east")) rot(3);
-		   if (function.contentEquals("rot90west")) rot(-3);
-		   if (function.contentEquals("rot90north")) rot2(3);
-		   if (function.contentEquals("rot90south")) rot2(-3);
-		   
+		   if (function.contentEquals("flip")) {
+			   pos.rotationXZ += 180;
+		   }
 		   if (function.contentEquals("rotrand")) {
-			   rot3(rand.nextInt(3) - 1);
-			   rot2(rand.nextInt(3) - 1);
-			   rot(rand.nextInt(3) - 1);
+			   if (rand.nextBoolean()) {
+				   if (rand.nextBoolean()) pos.rotationXY += angle * (rand.nextInt(3) - 1);
+				   else pos.rotationXZ += angle * (rand.nextInt(3) - 1);
+			   }
 			   }
 		   
 		   
+		   if (function.contentEquals("--")) iterations--;
+		   if (function.contentEquals("++")) iterations++;
 		   if (function.contentEquals("spliteast")) splitRight(rand);
 		   if (function.contentEquals("splitwest")) splitLeft(rand);
 		   if (function.contentEquals("splitnorth")) splitNorth(rand);
 		   if (function.contentEquals("splitsouth")) splitSouth(rand);
+		   if (function.contentEquals("casesplit"))if (rand.nextBoolean()) splitRand(rand);
 		   if (function.contentEquals("splitrand")) splitRand(rand);
-		   
-		   if (function.contentEquals("--")) iterations--;
-		   if (function.contentEquals("++")) iterations++;
-		   
+		   if (function.contentEquals("splitrand2d")) splitRand2d(rand);
+		   if (function.contentEquals("end")) iterations = 0;
+		   if (function.startsWith("#")) {
+			   function = function.replace("#","");
+			   if (!main)return;
+		   }
+		   if (function.startsWith("angle:")) {
+			   String[] f = function.split(":");
+			   int a = Integer.parseInt(f[1]);
+			   this.angle = a;
+		   }
+		   if (function.contentEquals("skip")) {
+			   move();
+		   }
+
 		   if (true) {
 			   if (function.contentEquals("shrink")) {
-				   iterations--;
 				   size *=0.7;
 			   }
 			   if (function.contentEquals("grow")) {
-				   iterations++;
 				   size *=1.3;
 			   }
 		   }
@@ -118,64 +130,79 @@ public class L {
 			   splitRight(rand);
 	   }
 	   public void splitRand(Random rand) {
-		   splitTrueRand(rand);
+//		   splitTrueRand(rand);
+		   if (rand.nextBoolean()) {
+			   if (rand.nextBoolean())
+				   splitLeft(rand);
+			   else
+				   splitRight(rand);
+		   } else {
+			   if (rand.nextBoolean())
+				   splitNorth(rand);
+			   else
+				   splitSouth(rand);
+		   }
+		   
 	   }
 	  double sizeDown = 0.8;
 	   public void splitTrueRand(Random rand) {
-		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations-1, size*sizeDown,false,stuff,SIZEX, SIZEY, SIZEZ);
+		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations+1, size*sizeDown,false,stuff,SIZEX,SIZEY,SIZEZ);
 		   l.pos.rotationXY = pos.rotationXY;
 		   l.pos.rotationXZ = pos.rotationXZ;
 		   l.pos.rotationZY = pos.rotationZY;
-		   l.rot(rand.nextInt(2) * 2 - 1);
-		   l.rot2(rand.nextInt(2) * 2 - 1);
-		   l.rot3(rand.nextInt(24) - 12);
+		   l.angle = angle;
+		   if (rand.nextBoolean())
+			   l.pos.rotationXY += angle;
+//		   else
+//			   l.pos.rotationZY += (rand.nextInt(2) * 2 - 1) * angle;
+		   l.pos.rotationXZ += (rand.nextInt(360)) * angle;
 		   l.place(rand);
 		   parent.system.add(l);
-		   iterations--;
+//		   iterations--;
 	   }
 	   
 	   public void splitNorth(Random rand) {
-		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations-1, size*sizeDown,false,stuff,SIZEX, SIZEY, SIZEZ);
+		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations+1, size*sizeDown,false,stuff,SIZEX,SIZEY,SIZEZ);
 		   l.pos.rotationXY = pos.rotationXY;
 		   l.pos.rotationXZ = pos.rotationXZ;
-		   l.pos.rotationZY = pos.rotationZY;
-		   l.rot2(-1);
+		   l.pos.rotationZY = pos.rotationZY - angle;
+		   l.angle = angle;
 		   l.place(rand);
 		   parent.system.add(l);
-		   iterations--;
+//		   iterations--;
 	   }
 	   
 	   public void splitSouth(Random rand) {
-		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations-1, size*sizeDown,false,stuff,SIZEX, SIZEY, SIZEZ);
+		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations+1, size*sizeDown,false,stuff,SIZEX,SIZEY,SIZEZ);
 		   l.pos.rotationXY = pos.rotationXY;
 		   l.pos.rotationXZ = pos.rotationXZ;
-		   l.pos.rotationZY = pos.rotationZY;
-		   l.rot2(1);
+		   l.pos.rotationZY = pos.rotationZY + angle;
+		   l.angle = angle;
 		   l.place(rand);
 		   parent.system.add(l);
-		   iterations--;
+//		   iterations--;
 	   }
 	   
 	   public void splitLeft(Random rand) {
-		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations-1, size*sizeDown,false,stuff,SIZEX, SIZEY, SIZEZ);
-		   l.pos.rotationXY = pos.rotationXY;
+		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations+1, size*sizeDown,false,stuff,SIZEX,SIZEY,SIZEZ);
+		   l.pos.rotationXY = pos.rotationXY - angle;
 		   l.pos.rotationXZ = pos.rotationXZ;
 		   l.pos.rotationZY = pos.rotationZY;
-		   l.rot(-1);
+		   l.angle = angle;
 		   l.place(rand);
 		   parent.system.add(l);
-		   iterations--;
+//		   iterations--;
 	   }
 	   
 	   public void splitRight(Random rand) {
-		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations-1, size*sizeDown,false,stuff,SIZEX, SIZEY, SIZEZ);
-		   l.pos.rotationXY = pos.rotationXY;
+		   L l = new L(new LSystemPos(pos.getX() + 0,pos.getY() + 0, pos.getZ() + 0), parent, system, iterations+1, size*sizeDown,false,stuff,SIZEX,SIZEY,SIZEZ);
+		   l.pos.rotationXY = pos.rotationXY + angle;
 		   l.pos.rotationXZ = pos.rotationXZ;
 		   l.pos.rotationZY = pos.rotationZY;
-		   l.rot(1);
+		   l.angle = angle;
 		   l.place(rand);
 		   parent.system.add(l);
-		   iterations--;
+//		   iterations--;
 	   }
 	   
 	   public LSystemVec[] cloneVecArray(LSystemVec[] a) {
@@ -210,7 +237,7 @@ public class L {
 		   }
 		   
 //		   worldIn.setBlockState(pos, BlocksT.ICE.getDefaultState(), 2);
-		   move(last);
+		   move();
 	   }
 	   
 	   public void placeWood(int x, int y, int z, Random rand) {
@@ -245,17 +272,16 @@ public class L {
 		   }
 	   }
 	   
-	   public void move(int face) {
+	   public void move() {
 		   pos = pos.forwards(size);
-		   last = face;
 	   }
 	   public void rot(int rot) {
-		   pos.rotationXY -= 30 * rot;
+		   pos.rotationXY -= angle * rot;
 	   }
 	   public void rot2(int rot) {
-		   pos.rotationZY -= 30 * rot;
+		   pos.rotationZY -= angle * rot;
 	   }
 	   public void rot3(int rot) {
-		   pos.rotationXZ -= 30 * rot;
+		   pos.rotationXZ -= angle * rot;
 	   }
 }
